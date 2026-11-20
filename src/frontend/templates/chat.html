@@ -1,0 +1,56 @@
+{% extends 'base.html' %}{% block title %}النقاش{% endblock %}
+{% block head %}<style>
+.chat-layout{display:grid;grid-template-columns:280px 1fr;gap:1rem;height:calc(100vh - 190px);min-height:420px}
+.chat-list{overflow:auto}.chat-pane{display:flex;flex-direction:column;overflow:hidden}
+.chat-pane .chat-stream{flex:1;overflow:auto;padding:1rem;max-height:none;height:auto}
+.chat-item{display:flex;gap:.6rem;align-items:center;padding:.7rem .9rem;text-decoration:none;color:inherit;border-bottom:1px solid var(--tblr-border-color)}
+.chat-item.active{background:var(--tblr-primary-lt,#eef2ff)}.chat-item small{display:block;color:var(--tblr-secondary,#667085)}
+.chat-compose2{display:flex;gap:.5rem;padding:.75rem;border-top:1px solid var(--tblr-border-color)}
+@media(max-width:768px){.chat-layout{grid-template-columns:1fr;height:auto}.chat-pane{height:70vh}}
+</style>{% endblock %}
+{% block content %}
+<div class="chat-layout">
+ <div class="card chat-list">
+  {% for c in chans %}<a class="chat-item {{ 'active' if c.key == active }}" href="{{ url_for('discussion', c=c.key) }}">
+   <span class="avatar avatar-sm"><i class="ti {{ c.icon }}"></i></span><span class="flex-fill"><b>{{ c.title }}</b><small>{{ c.sub }}</small></span>
+   {% if c.unread %}<span class="badge bg-red">{{ c.unread }}</span>{% endif %}</a>
+  {% else %}<div class="p-3 text-secondary">لا توجد محادثات.</div>{% endfor %}
+ </div>
+ <div class="card chat-pane">
+  {% if active %}
+  <div class="card-header"><h4 class="card-title">{{ title }}</h4></div>
+  <div class="chat-stream" id="stream"><div class="text-center text-secondary" id="empty">ابدأ المحادثة…</div></div>
+  <div class="chat-compose2"><input id="body" class="form-control" placeholder="اكتب رسالة…" autocomplete="off">
+   <button id="send" class="btn btn-primary"><i class="ti ti-send"></i></button></div>
+  {% else %}<div class="p-4 text-secondary">اختر محادثة.</div>{% endif %}
+ </div>
+</div>
+{% endblock %}
+{% block scripts %}{% if active %}<script>
+const CH = {{ active|tojson }}, URL_ = "/api/chat/" + CH, stream = document.getElementById('stream');
+let last = 0;
+function add(m){
+  document.getElementById('empty')?.remove();
+  const d = document.createElement('div');
+  d.className = 'msg ' + (m.mine ? 'is-mine' : '') + (m.role === 'doctor' ? ' is-supervisor' : '');
+  const av = document.createElement('span'); av.className = 'ctx-avatar msg-avatar'; av.textContent = m.name.replace('د. ','')[0];
+  const b = document.createElement('div'); b.className = 'msg-body';
+  const a = document.createElement('div'); a.className = 'msg-author'; a.textContent = m.mine ? 'أنت' : m.name;
+  const bub = document.createElement('div'); bub.className = 'msg-bubble';
+  const p = document.createElement('p'); p.className = 'cmt-text'; p.textContent = m.body;
+  const t = document.createElement('time'); t.className = 'msg-time'; t.textContent = m.created_at.slice(11,16);
+  bub.append(p, t); b.append(a, bub); d.append(av, b); stream.append(d); last = Math.max(last, m.id);
+}
+async function poll(){
+  try{ const r = await fetch(URL_ + '?after=' + last); const rows = await r.json();
+    if(rows.length){ const atEnd = stream.scrollHeight - stream.scrollTop - stream.clientHeight < 80; rows.forEach(add); if(atEnd || last === rows[rows.length-1].id) stream.scrollTop = stream.scrollHeight; } }catch(e){}
+}
+async function send(){
+  const i = document.getElementById('body'), v = i.value.trim(); if(!v) return; i.value = '';
+  await fetch(URL_ + '?after=' + last, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({body:v})})
+    .then(r => r.json()).then(rows => { rows.forEach(add); stream.scrollTop = stream.scrollHeight; });
+}
+document.getElementById('send').onclick = send;
+document.getElementById('body').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); send(); }});
+poll().then(() => stream.scrollTop = stream.scrollHeight); setInterval(poll, 2500);
+</script>{% endif %}{% endblock %}

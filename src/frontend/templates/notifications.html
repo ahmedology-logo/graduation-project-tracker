@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block title %}الإشعارات{% endblock %}
+{% block content %}
+<div class="page-header mb-3"><h2 class="page-title">الإشعارات</h2></div>
+<div class="card"><div class="list-group list-group-flush">
+ {% for n in items %}
+  <a href="{{ n.url }}" class="list-group-item list-group-item-action d-flex justify-content-between gap-3">
+   <span><i class="ti ti-bell me-2"></i>{{ n.text }}</span><small class="text-secondary" dir="ltr">{{ n.created_at[:16] }}</small></a>
+ {% else %}<div class="p-4 text-center text-secondary">لا توجد إشعارات.</div>{% endfor %}
+</div></div>
+{% endblock %}

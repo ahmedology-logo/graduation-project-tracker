@@ -1,0 +1,19 @@
+{% extends 'base.html' %}{% block title %}تقديم مشروع{% endblock %}
+{% block content %}
+<div class="page-header mb-3"><h2 class="page-title">تقديم مشروع التخرج</h2><div class="text-secondary">اختر فريقك ومشرفك، واكتب فكرة مشروعك.</div></div>
+{% if rejected %}<div class="alert alert-warning"><b>رُفض طلبك السابق «{{ rejected.title }}»</b>{% if rejected.reject_reason %}<div>السبب: {{ rejected.reject_reason }}</div>{% endif %}<div>عدّل فكرتك أو اختر مشرفاً آخر وأعد التقديم.</div></div>{% endif %}
+<form method="POST" action="{{ url_for('student_create_project') }}" class="card">
+ <div class="card-body">
+  <div class="mb-3"><label class="form-label">عنوان المشروع</label><input name="title" class="form-control" maxlength="150" required></div>
+  <div class="mb-3"><label class="form-label">الوصف</label><textarea name="description" class="form-control" rows="4" maxlength="2000"></textarea></div>
+  <div class="mb-3"><label class="form-label">المشرف</label>
+   <select name="supervisor_id" class="form-select" required><option value="">اختر مشرفاً…</option>
+    {% for d in docs %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}</select></div>
+  <div class="mb-3"><label class="form-label">أعضاء الفريق <small class="text-secondary">(أنت القائد، واختر زملاءك المتاحين)</small></label>
+   {% if free %}<div class="row g-2">{% for s in free %}
+    <div class="col-md-6"><label class="form-check card p-2 ps-5 mb-0"><input class="form-check-input" type="checkbox" name="members" value="{{ s.id }}"><span class="form-check-label">{{ s.name }} <small class="text-secondary" dir="ltr">{{ s.id }}</small></span></label></div>
+   {% endfor %}</div>{% else %}<div class="text-secondary">لا يوجد زملاء متاحون حالياً، سيُقدَّم المشروع بك وحدك.</div>{% endif %}</div>
+ </div>
+ <div class="card-footer text-end"><button class="btn btn-primary"><i class="ti ti-send me-1"></i>إرسال الطلب</button></div>
+</form>
+{% endblock %}

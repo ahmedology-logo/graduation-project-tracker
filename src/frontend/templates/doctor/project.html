@@ -1,0 +1,37 @@
+{% extends 'base.html' %}{% block title %}{{ p.title }}{% endblock %}
+{% block content %}
+<div class="page-header mb-3"><h2 class="page-title">{{ p.title }}</h2>
+ <div class="text-secondary">{% for m in team %}{{ m.name }}{{ '، ' if not loop.last }}{% endfor %}</div></div>
+<div class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between small mb-1"><span>الإنجاز</span><b>{{ progress }}%</b></div>
+ <div class="progress"><div class="progress-bar" style="width: {{ progress }}%"></div></div>
+ {% if p.description %}<p class="mt-3 mb-0">{{ p.description }}</p>{% endif %}</div></div>
+
+<div class="card mb-3"><div class="card-header"><h4 class="card-title">المراحل</h4></div><div class="list-group list-group-flush">
+ {% for ms in milestones %}<div class="list-group-item">
+  <div class="d-flex justify-content-between flex-wrap gap-2"><b>{{ ms.idx }}. {{ ms.title }} <small class="text-secondary">· {{ ms.due }}</small></b>
+   {% if ms.status=='approved' %}<span class="badge bg-green-lt">اعتُمدت</span>{% elif ms.status=='submitted' %}<span class="badge bg-yellow-lt">بانتظار المراجعة</span>{% elif ms.status=='revise' %}<span class="badge bg-red-lt">مطلوب تعديل</span>{% else %}<span class="badge bg-secondary-lt">لم تُسلَّم</span>{% endif %}</div>
+  {% if ms.file_name %}<div class="small mt-2"><i class="ti ti-file me-1"></i><a href="{{ url_for('get_file', name=ms.file_name) }}">{{ ms.file_label }}</a> <span class="text-secondary">· الجولة {{ ms.round }}</span></div>{% endif %}
+  {% if ms.note %}<div class="small text-secondary mt-1">ملاحظة الفريق: {{ ms.note }}</div>{% endif %}
+  {% if ms.feedback and ms.status != 'submitted' %}<div class="small mt-1"><b>ملاحظتك:</b> {{ ms.feedback }}</div>{% endif %}
+  {% if ms.status == 'submitted' %}
+  <form method="POST" action="{{ url_for('doctor_review', mid=ms.id) }}" class="mt-3">
+   <textarea name="feedback" rows="2" class="form-control mb-2" placeholder="ملاحظات (إلزامية عند طلب التعديل)"></textarea>
+   <button name="decision" value="approve" class="btn btn-primary"><i class="ti ti-check me-1"></i>اعتماد</button>
+   <button name="decision" value="revise" class="btn btn-outline-warning"><i class="ti ti-edit me-1"></i>مطلوب تعديل</button>
+  </form>{% endif %}
+ </div>{% endfor %}
+</div></div>
+
+<div class="card"><div class="card-header"><h4 class="card-title">الدرجة النهائية</h4>
+ {% if p.grade_locked %}<span class="badge bg-green-lt ms-auto"><i class="ti ti-lock me-1"></i>معتمدة ومقفلة</span>{% endif %}</div>
+ <div class="card-body">
+ {% if p.grade_locked %}<div class="h2 mb-1">{{ p.grade }} / 100 · {{ grade_label(p.grade) }}</div><div class="text-secondary">{{ p.grade_note }}</div>
+ {% else %}
+ <form method="POST" action="{{ url_for('doctor_grade', pid=p.id) }}" class="row g-2">
+  <div class="col-md-3"><input type="number" name="grade" min="0" max="100" value="{{ p.grade if p.grade is not none }}" class="form-control" placeholder="من 100" required></div>
+  <div class="col-md-5"><input name="note" value="{{ p.grade_note or '' }}" class="form-control" placeholder="ملاحظات"></div>
+  <div class="col-md-4 d-flex gap-2"><button class="btn btn-outline-primary">حفظ</button>
+   <button name="lock" value="1" class="btn btn-primary" onclick="return confirm('اعتماد الدرجة يقفلها نهائياً. متابعة؟')">اعتماد وقفل</button></div>
+ </form>{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,14 @@
+<article class="req-card mb-3" id="request-{{ p.id }}">
+ <header class="req-head"><div class="req-title"><b>{{ p.title }}</b><span>قُدّم {{ p.created_at[:16] }}</span></div></header>
+ {% if p.description %}<p class="req-desc">{{ p.description }}</p>{% endif %}
+ <ul class="req-team">{% for m in teams[p.id] %}<li class="{{ 'is-leader' if m.is_leader }}"><span>{{ m.name }}{% if m.is_leader %} <span class="ctx-tag">قائد</span>{% endif %} <small dir="ltr">{{ m.id }}</small></span></li>{% endfor %}</ul>
+ <footer class="req-actions">
+  <form action="{{ url_for('doctor_decide', pid=p.id) }}" method="POST"><input type="hidden" name="decision" value="accept">
+   <button class="btn btn-primary" onclick="return confirm('قبول «{{ p.title }}»؟ سيُبلَّغ الفريق.')"><i class="ti ti-check me-1"></i>قبول الإشراف</button></form>
+  <details class="req-reject"><summary class="btn btn-outline-secondary"><i class="ti ti-x me-1"></i>رفض…</summary>
+   <form action="{{ url_for('doctor_decide', pid=p.id) }}" method="POST" class="req-reject-form"><input type="hidden" name="decision" value="reject">
+    <label class="form-label">سبب الرفض <small>(اختياري، يصل إلى الفريق)</small></label>
+    <textarea name="reason" rows="2" maxlength="500" class="form-control"></textarea>
+    <button class="btn btn-outline-danger mt-2" onclick="return confirm('رفض هذا الطلب؟')">تأكيد الرفض</button></form></details>
+ </footer>
+</article>

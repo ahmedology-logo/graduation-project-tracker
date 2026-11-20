@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block title %}طلبات الإشراف{% endblock %}
+{% block content %}
+<div class="page-header mb-3"><h2 class="page-title">طلبات الإشراف</h2></div>
+{% for p in pending %}{% include 'doctor/_request.html' %}
+{% else %}<div class="card card-body text-center text-secondary">لا توجد طلبات بانتظار قرارك.</div>{% endfor %}
+{% endblock %}

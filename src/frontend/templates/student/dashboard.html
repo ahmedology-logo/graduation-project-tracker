@@ -1,0 +1,51 @@
+{% extends 'base.html' %}{% block title %}لوحة الطالب{% endblock %}
+{% block content %}
+<div class="page-header mb-3"><h2 class="page-title">مرحباً {{ me.name.split(' ')[0] }} 👋</h2></div>
+{% if not project %}
+ {% if rejected %}<div class="alert alert-warning"><b>رُفض طلب «{{ rejected.title }}»</b>{% if rejected.reject_reason %}<div>السبب: {{ rejected.reject_reason }}</div>{% endif %}</div>{% endif %}
+ <div class="card"><div class="card-body text-center py-5">
+  <i class="ti ti-rocket" style="font-size:3rem"></i>
+  <h3 class="mt-3">لم تبدأ مشروعك بعد</h3><p class="text-secondary">كوّن فريقك واختر مشرفك وقدّم فكرتك.</p>
+  <a href="{{ url_for('student_team') }}" class="btn btn-primary">ابدأ التقديم</a></div></div>
+{% else %}
+ <div class="card mb-3"><div class="card-body">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+   <div><h3 class="mb-1">{{ project.title }}</h3><div class="text-secondary">المشرف: {{ sup.name }}</div></div>
+   {% if project.status == 'pending' %}<span class="badge bg-yellow-lt"><i class="ti ti-clock me-1"></i>بانتظار موافقة المشرف</span>
+   {% elif project.grade_locked %}<span class="badge bg-green-lt">مكتمل · {{ project.grade }}/100 · {{ grade_label(project.grade) }}</span>
+   {% else %}<span class="badge bg-blue-lt">قيد التنفيذ</span>{% endif %}
+  </div>
+  {% if project.description %}<p class="mt-3 mb-0">{{ project.description }}</p>{% endif %}
+  {% if project.status == 'approved' %}<div class="mt-3"><div class="d-flex justify-content-between small mb-1"><span>إنجاز المشروع</span><b>{{ progress }}%</b></div><div class="progress"><div class="progress-bar" style="width: {{ progress }}%"></div></div></div>{% endif %}
+ </div></div>
+
+ <div class="row g-3">
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header"><h4 class="card-title">الفريق</h4></div>
+   <ul class="list-group list-group-flush">{% for m in team %}<li class="list-group-item d-flex justify-content-between"><span>{{ m.name }} <small class="text-secondary" dir="ltr">{{ m.id }}</small></span>{% if m.is_leader %}<span class="badge bg-blue-lt">قائد</span>{% endif %}</li>{% endfor %}</ul></div></div>
+
+  <div class="col-lg-8" id="milestones"><div class="card"><div class="card-header"><h4 class="card-title">مراحل المشروع</h4></div>
+   {% if project.status == 'pending' %}<div class="card-body text-secondary">ستظهر المراحل بعد قبول المشرف لمشروعك.</div>
+   {% else %}<div class="list-group list-group-flush">
+    {% for ms in milestones %}
+    <div class="list-group-item">
+     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div><b>{{ ms.idx }}. {{ ms.title }}</b> <small class="text-secondary">· الموعد {{ ms.due }}</small></div>
+      {% if ms.status == 'approved' %}<span class="badge bg-green-lt"><i class="ti ti-check me-1"></i>اعتُمدت</span>
+      {% elif ms.status == 'submitted' %}<span class="badge bg-yellow-lt">بانتظار المراجعة</span>
+      {% elif ms.status == 'revise' %}<span class="badge bg-red-lt">مطلوب تعديل</span>
+      {% else %}<span class="badge bg-secondary-lt">لم تُسلَّم</span>{% endif %}
+     </div>
+     {% if ms.file_name %}<div class="small mt-2"><i class="ti ti-file me-1"></i><a href="{{ url_for('get_file', name=ms.file_name) }}">{{ ms.file_label }}</a> <span class="text-secondary">· الجولة {{ ms.round }}</span></div>{% endif %}
+     {% if ms.feedback %}<div class="alert alert-{{ 'success' if ms.status=='approved' else 'warning' }} py-2 mt-2 mb-0"><b>ملاحظة المشرف:</b> {{ ms.feedback }}</div>{% endif %}
+     {% if ms.status in ('todo','revise') %}
+     <form method="POST" action="{{ url_for('student_submit', mid=ms.id) }}" enctype="multipart/form-data" class="mt-3 row g-2">
+      <div class="col-md-5"><input type="file" name="file" class="form-control" {{ 'required' if not ms.file_name }}></div>
+      <div class="col-md-5"><input name="note" class="form-control" placeholder="ملاحظة للمشرف (اختياري)"></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100">{{ 'إعادة التسليم' if ms.status=='revise' else 'تسليم' }}</button></div>
+     </form>{% endif %}
+    </div>{% endfor %}
+   </div>{% endif %}
+  </div></div>
+ </div>
+{% endif %}
+{% endblock %}
