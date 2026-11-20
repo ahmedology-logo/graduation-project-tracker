@@ -1,0 +1,10 @@
+Static-analysis baseline (before refactoring)
+
+Commands intended for the baseline stage:
+  ruff check week5/project_features.py --statistics
+  pylint week5/project_features.py
+
+STATUS: Ruff and Pylint were not available in the execution environment, and
+network access prevented installation. Their actual outputs/scores are therefore
+not recorded. Run the commands locally before submitting; do not treat this note
+as a clean linter result.
